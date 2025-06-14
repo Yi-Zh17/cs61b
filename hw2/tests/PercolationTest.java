@@ -78,11 +78,24 @@ public class PercolationTest {
         assertThat(p.percolates()).isTrue();
     }
 
-    // TODO: Using the given tests above as a template,
-    //       write some more tests and delete the fail() line
     @Test
-    public void yourFirstTestHere() {
-        fail("Did you write your own tests?");
+    public void testNumberOfOpenSites() {
+        int N = 2;
+        Percolation p = new Percolation(N);
+        p.open(0, 0);
+        p.open(1, 1);
+        assertThat(p.numberOfOpenSites()).isEqualTo(2);
+    }
+
+    @Test
+    public void testBottomFull() {
+        int N = 3;
+        Percolation p = new Percolation(N);
+        p.open(2, 2);
+        p.open(0, 0);
+        p.open(1, 0);
+        p.open(2, 0);
+        assertThat(p.isFull(2, 2)).isFalse();
     }
 
 }
