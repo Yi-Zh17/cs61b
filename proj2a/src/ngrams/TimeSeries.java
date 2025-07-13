@@ -1,5 +1,10 @@
 package ngrams;
 
+import net.sf.saxon.serialize.BinaryTextDecoder;
+import org.antlr.v4.runtime.tree.Tree;
+import org.apache.logging.log4j.message.TimestampMessage;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -30,15 +35,18 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      */
     public TimeSeries(TimeSeries ts, int startYear, int endYear) {
         super();
-        // TODO: Fill in this constructor.
+        for(int i = startYear; i <= endYear; ++i) {
+            if(ts.containsKey(i)) {
+                this.put(i, ts.get(i));
+            }
+        }
     }
 
     /**
      *  Returns all years for this time series in ascending order.
      */
     public List<Integer> years() {
-        // TODO: Fill in this method.
-        return null;
+        return new ArrayList<>(this.keySet());
     }
 
     /**
@@ -46,8 +54,7 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      *  order of years().
      */
     public List<Double> data() {
-        // TODO: Fill in this method.
-        return null;
+        return new ArrayList<>(this.values());
     }
 
     /**
@@ -60,8 +67,26 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      * should store the value from the TimeSeries that contains that year.
      */
     public TimeSeries plus(TimeSeries ts) {
-        // TODO: Fill in this method.
-        return null;
+        if(this.isEmpty() && ts.isEmpty()) {
+            return new TimeSeries();
+        } else if(this.isEmpty()) {
+            return new TimeSeries(ts, ts.years().getFirst(), ts.years().getLast());
+        } else if(ts.isEmpty()) {
+            return new TimeSeries(this, this.years().getFirst(), this.years().getLast());
+        } else {
+            TimeSeries result = new TimeSeries();
+            TreeMap<Integer, Integer> comparison = this.compare(ts);
+            for(int i : comparison.keySet()) {
+                if(comparison.get(i) == 3) {
+                    result.put(i, this.get(i) + ts.get(i));
+                } else if(comparison.get(i) == 2) {
+                    result.put(i, ts.get(i));
+                } else if(comparison.get(i) == 1) {
+                    result.put(i, this.get(i));
+                }
+            }
+            return result;
+        }
     }
 
     /**
@@ -74,10 +99,39 @@ public class TimeSeries extends TreeMap<Integer, Double> {
      * If TS has a year that is not in this TimeSeries, ignore it.
      */
     public TimeSeries dividedBy(TimeSeries ts) {
-        // TODO: Fill in this method.
-        return null;
+        TimeSeries quo = new TimeSeries();
+
+        TreeMap<Integer, Integer> comparison = this.compare(ts);
+
+        for(int i : comparison.keySet()) {
+            if(comparison.get(i) == 3) {
+                quo.put(i, this.get(i) / ts.get(i));
+            } else if(comparison.get(i) == 1) {
+                throw new IllegalArgumentException("TS value missing in the given year");
+            }
+        }
+
+        return quo;
     }
 
-    // TODO: Add any private helper methods.
-    // TODO: Remove all TODO comments before submitting.
+    // Helper function
+    private TreeMap<Integer, Integer> compare(TimeSeries ts) {
+        TreeMap<Integer, Integer> result = new TreeMap<>();
+        int minimum = Math.min(this.years().getFirst(), ts.years().getFirst());
+        int maximum = Math.max(this.years().getLast(), ts.years().getLast());
+
+        for(int i = minimum; i <= maximum; ++i) {
+            if(this.containsKey(i) && ts.containsKey(i)) {
+                result.put(i, 3);
+            } else if(ts.containsKey(i)) {
+                result.put(i, 2);
+            } else if(this.containsKey(i)) {
+                result.put(i, 1);
+            } else {
+                result.put(i, 0);
+            }
+        }
+        return result;
+    }
+
 }
